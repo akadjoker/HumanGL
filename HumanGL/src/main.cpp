@@ -66,6 +66,7 @@ MeshBuffer *CreateCube()
 
 struct Pose
 {
+    Vec3 position;
     float torsoRotation;
     float headRotation;
     float upperArmRotation[2]; // [0] = esquerdo, [1] = direito
@@ -75,7 +76,7 @@ struct Pose
 
     Pose()
     {
-         torsoRotation = 0.0f;
+        torsoRotation = 0.0f;
         headRotation = 0.0f;
         for (int i = 0; i < 2; i++)
         {
@@ -91,6 +92,9 @@ struct Pose
         Pose result;
         result.torsoRotation = a.torsoRotation * (1 - t) + b.torsoRotation * t;
         result.headRotation = a.headRotation * (1 - t) + b.headRotation * t;
+        result.position.x = a.position.x  * (1 - t) + b.position.x * t;
+        result.position.y = a.position.y  * (1 - t) + b.position.y * t;
+        result.position.z = a.position.z  * (1 - t) + b.position.z * t;
 
         for (int i = 0; i < 2; i++)
         {
@@ -176,7 +180,7 @@ class AnimationManager
 private:
     std::map<std::string, Animation> animations;
     std::string currentAnimation;
-    std::string nextAnimation; 
+    std::string nextAnimation;
     float currentTime;
     float playbackSpeed;
     bool playing;
@@ -195,6 +199,8 @@ public:
         currentAnimation = "";
         nextAnimation = "";
     }
+
+    std::string const CurrentAnimation() {return currentAnimation;}
 
     void addAnimation(const Animation &anim)
     {
@@ -270,6 +276,87 @@ public:
         return animations[currentAnimation].getPoseAtTime(currentTime);
     }
 
+    void createDanceAnimation()
+    {
+        Animation dance("dance", true);
+        const float PI = 3.14159f;
+
+        // Pose 1: Braços para cima, quadril para um lado
+        Pose pose1;
+  
+        pose1.torsoRotation = 15.0f * PI / 180.0f;
+        pose1.upperArmRotation[0] = pose1.upperArmRotation[1] = -90.0f * PI / 180.0f; // Braços levantados
+        pose1.forearmRotation[0] = pose1.forearmRotation[1] = -45.0f * PI / 180.0f;   // Cotovelos dobrados
+        pose1.thighRotation[0] = -20.0f * PI / 180.0f;                                // Perna esquerda flexionada
+        dance.addKeyframe(pose1, 0.0f);
+
+        // Pose 2: Movimento de disco
+        Pose pose2;
+        pose2.torsoRotation = -15.0f * PI / 180.0f;
+        pose2.upperArmRotation[0] = -45.0f * PI / 180.0f;  // Braço esquerdo diagonal
+        pose2.upperArmRotation[1] = -135.0f * PI / 180.0f; // Braço direito diagonal
+        pose2.forearmRotation[0] = pose2.forearmRotation[1] = -45.0f * PI / 180.0f;
+        pose2.thighRotation[1] = -20.0f * PI / 180.0f; // Perna direita flexionada
+        dance.addKeyframe(pose2, 0.5f);
+
+        // Pose 3: Giro e movimento dos braços
+        Pose pose3;
+        pose3.torsoRotation = 180.0f * PI / 180.0f;
+        pose3.upperArmRotation[0] = pose3.upperArmRotation[1] = -90.0f * PI / 180.0f;
+        pose3.forearmRotation[0] = -90.0f * PI / 180.0f;
+        pose3.forearmRotation[1] = 90.0f * PI / 180.0f;
+        dance.addKeyframe(pose3, 1.0f);
+
+        // Volta para pose inicial
+        dance.addKeyframe(pose1, 1.5f);
+
+        addAnimation(dance);
+    }
+
+    void createFighterAnimation()
+    {
+        Animation fight("fight", true);
+        const float PI = 3.14159f;
+
+        // Pose inicial de luta
+        Pose fightStance;
+        fightStance.torsoRotation = 45.0f * PI / 180.0f;        // Virado em diagonal
+        fightStance.upperArmRotation[0] = -90.0f * PI / 180.0f; // Braço esquerdo em guarda
+        fightStance.upperArmRotation[1] = -45.0f * PI / 180.0f; // Braço direito em guarda
+        fightStance.forearmRotation[0] = -90.0f * PI / 180.0f;
+        fightStance.forearmRotation[1] = -90.0f * PI / 180.0f;
+        fightStance.thighRotation[0] = -30.0f * PI / 180.0f; // Pernas flexionadas
+        fightStance.thighRotation[1] = -30.0f * PI / 180.0f;
+        fightStance.calfRotation[0] = 30.0f * PI / 180.0f;
+        fightStance.calfRotation[1] = 30.0f * PI / 180.0f;
+        fight.addKeyframe(fightStance, 0.0f);
+
+        // Soco direito
+        Pose punch;
+        punch.torsoRotation = 30.0f * PI / 180.0f;
+        punch.upperArmRotation[1] = 45.0f * PI / 180.0f; // Braço direito estendido
+        punch.forearmRotation[1] = 0.0f;
+        punch.upperArmRotation[0] = -90.0f * PI / 180.0f; // Braço esquerdo mantém guarda
+        punch.forearmRotation[0] = -90.0f * PI / 180.0f;
+        fight.addKeyframe(punch, 0.2f);
+
+        // Volta para posição de guarda
+        fight.addKeyframe(fightStance, 0.4f);
+
+        //  perna esquerda
+        Pose kick;
+        kick.torsoRotation = 60.0f * PI / 180.0f;
+        kick.thighRotation[0] = 90.0f * PI / 180.0f;  // Perna esquerda levantada
+        kick.calfRotation[0] = 0.0f;                  // Perna esticada
+        kick.thighRotation[1] = -45.0f * PI / 180.0f; // Perna direita como base
+        kick.calfRotation[1] = 45.0f * PI / 180.0f;
+        fight.addKeyframe(kick, 0.6f);
+
+        // Retorno à posição de guarda
+        fight.addKeyframe(fightStance, 1.0f);
+
+        addAnimation(fight);
+    }
     // Cria algumas animações predefinidas
     void createDefaultAnimations()
     {
@@ -297,11 +384,13 @@ public:
         Animation jump("jump", false);
 
         Pose jumpStart; // Agachado
+        jumpStart.position.y = 2;
         jumpStart.thighRotation[0] = jumpStart.thighRotation[1] = 45.0f * (3.14159f / 180.0f);
         jumpStart.calfRotation[0] = jumpStart.calfRotation[1] = -90.0f * (3.14159f / 180.0f);
         jump.addKeyframe(jumpStart, 0.0f);
 
         Pose jumpMiddle; // No ar
+        jumpMiddle.position.y = 5;
         jumpMiddle.thighRotation[0] = jumpMiddle.thighRotation[1] = -30.0f * (3.14159f / 180.0f);
         jumpMiddle.upperArmRotation[0] = jumpMiddle.upperArmRotation[1] = -180.0f * (3.14159f / 180.0f);
         jump.addKeyframe(jumpMiddle, 0.5f);
@@ -332,6 +421,7 @@ class Humanoid
 private:
     MeshBuffer *cubeMesh;
     MatrixStack matrixStack;
+    Vec3 position;
 
     AnimationManager animManager;
 
@@ -352,6 +442,8 @@ public:
     {
         cubeMesh = CreateCube();
         animManager.createDefaultAnimations();
+        animManager.createDanceAnimation();
+        animManager.createFighterAnimation();
         animManager.playAnimation("jump");
     }
 
@@ -367,7 +459,7 @@ public:
     {
         matrixStack.identity();
 
-        matrixStack.translate(0.0f, 2.0f, 0.0f);
+        matrixStack.translate(position.x,position.y,position.z);
 
         // Rotação principal do torso
         matrixStack.rotateY(torsoRotation);
@@ -473,6 +565,13 @@ public:
         // Aplica a pose atual ao modelo
         setTorsoRotation(currentPose.torsoRotation);
         setHeadRotation(currentPose.headRotation);
+        if (animManager.CurrentAnimation()=="jump")
+        {
+        position = currentPose.position;
+        } else 
+        {
+            position.y=2;
+        }
 
         for (int i = 0; i < 2; i++)
         {
@@ -605,6 +704,7 @@ int main(int argc, char *argv[])
 
     Humanoid human;
 
+
     float time = 0.0f;
 
     GUI *widgets = GUI::Instance();
@@ -704,7 +804,15 @@ int main(int argc, char *argv[])
         else if (Input::IsKeyDown(SDLK_2))
         {
             human.playAnimation("jump");
+        }else if (Input::IsKeyDown(SDLK_3))
+        {
+            human.playAnimation("dance");
         }
+         else if (Input::IsKeyDown(SDLK_4))
+        {
+            human.playAnimation("fight");
+        }
+
 
         shaderCube.Use();
         shaderCube.SetMatrix4("model", identity.m);
