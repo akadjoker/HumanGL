@@ -248,11 +248,19 @@ void AnimationManager::createDefaultAnimations()
     jumpStart.calfRotation[0] = jumpStart.calfRotation[1] = -90.0f * (3.14159f / 180.0f);
     jump.addKeyframe(jumpStart, 0.0f);
 
-    Pose jumpMiddle;
-    jumpMiddle.position.y = 5;
-    jumpMiddle.thighRotation[0] = jumpMiddle.thighRotation[1] = -30.0f * (3.14159f / 180.0f);
-    jumpMiddle.upperArmRotation[0] = jumpMiddle.upperArmRotation[1] = -180.0f * (3.14159f / 180.0f);
-    jump.addKeyframe(jumpMiddle, 0.5f);
+    // Pose jumpMiddle;
+    // jumpMiddle.position.y = 2;
+    // jumpMiddle.thighRotation[0] = jumpMiddle.thighRotation[1]  -30.0f * (3.14159f / 180.0f);
+    // jumpMiddle.upperArmRotation[0] = jumpMiddle.upperArmRotation[1] = -180.0f * (3.14159f / 180.0f);
+    // jump.addKeyframe(jumpMiddle, 0.4f);
+
+    Pose jumpAir;
+    jumpAir.position.y = 5;
+    jumpAir.thighRotation[0] = jumpAir.thighRotation[1] = -30.0f * (3.14159f / 180.0f);
+    jumpAir.upperArmRotation[0] = jumpAir.upperArmRotation[1] = -180.0f * (3.14159f / 180.0f);
+    jump.addKeyframe(jumpAir, 0.4f);
+
+
 
     Pose jumpEnd = jumpStart;
     jump.addKeyframe(jumpEnd, 1.0f);

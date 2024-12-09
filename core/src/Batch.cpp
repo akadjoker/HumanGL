@@ -1971,7 +1971,7 @@ void Font::Print(float x, float y, const char *text, ...)
       
 
     
-
+        Reset();
      
        std::ifstream file(filePath);
        float m_height =1;
@@ -2215,6 +2215,52 @@ bool Font::LoadDefaultFont()
     m_baseSize = (int)m_recs[0].height;
 
     LogInfo("[FONT]: Default font loaded successfully (%i glyphs)", m_glyphCount);
+
+    return true;
+}
+
+
+
+bool Font::Reset()
+{
+
+
+    m_glyphCount = 224;
+    m_glyphPadding = 0;
+
+    int charsHeight = 10;
+    int charsDivisor = 1; // Every char is separated from the consecutive by a 1 pixel divisor, horizontally and vertically
+
+    m_glyphs.resize(m_glyphCount);
+    m_recs.resize(m_glyphCount);
+
+  
+
+    int currentLine = 0;
+    int currentPosX = charsDivisor;
+    int testPosX = charsDivisor;
+
+    for (int i = 0; i < m_glyphCount; i++)
+    {
+        m_glyphs[i].value = 32 + i; // First char is 32
+
+        m_recs[i].x = 0;
+        m_recs[i].y = 0;
+        m_recs[i].width = 16;
+        m_recs[i].height = 16;
+      
+     
+
+        // NOTE: On default defaultFont character offsets and xAdvance are not required
+        m_glyphs[i].offsetX = 0;
+        m_glyphs[i].offsetY = 0;
+        m_glyphs[i].advanceX = 0;
+    }
+
+    // pixmap.Save("font.png");
+
+    m_baseSize = (int)m_recs[0].height;
+
 
     return true;
 }

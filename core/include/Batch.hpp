@@ -200,7 +200,7 @@ class  Font
         Font(const Font& other) = delete;
         Font& operator=(const Font& other) = delete;
 
-    
+        bool Reset();
 
 
         RenderBatch *batch;

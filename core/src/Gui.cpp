@@ -18,7 +18,7 @@ Skin::Skin()
     m_font = nullptr;
 
     m_font = new Font();
-    m_font->LoadDefaultFont();
+   // m_font->LoadDefaultFont();
     m_font->Load( "assets/font/font1.fnt");
 }
 
