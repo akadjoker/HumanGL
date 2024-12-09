@@ -149,7 +149,7 @@ class  Font
         ~Font();
 
 
-        bool Load(const char* filePath);
+        bool Load(const std::string& filePath);
 
         void SetClip(int x, int y, int w, int h);
         void EnableClip(bool enable);
@@ -183,6 +183,18 @@ class  Font
 
     private:
         friend class RenderBatch;
+
+
+    struct Character
+        {
+            int id;
+            u16 x;
+            u16 y;
+            u16 width;
+            u16 height;
+            u16 xoffset;
+            u16 yoffset;
+          };
 
 
         Font(const Font& other) = delete;

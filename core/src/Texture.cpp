@@ -1,9 +1,12 @@
-#include "Texture.hpp"
-
+#define GL_GLEXT_PROTOTYPES
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+#include <SDL3/SDL_opengl_glext.h>
+#include "Texture.hpp"
+#include "Device.hpp"
+#include "stb_image.h"
 
-extern  char* LoadDataFile(const char* fileName, unsigned int* bytesRead);
+
 
 
 Texture::Texture() : HorizontalWrap(WrapMode::Repeat),
@@ -347,71 +350,71 @@ bool Texture2D::Load(const Pixmap &pixmap)
 bool Texture2D::Load(const char *file_name)
 {
 
-    // unsigned int bytesRead;
-    // unsigned char *fileData = LoadDataFile(file_name, &bytesRead);
-    // if (!fileData)
-    //     return false;
+    unsigned int bytesRead;
+    unsigned char *fileData = LoadDataFile(file_name, &bytesRead);
+    if (!fileData)
+        return false;
 
-    // unsigned char *data = stbi_load_from_memory(fileData, bytesRead, &width, &height, &components, 0);
+    unsigned char *data = stbi_load_from_memory(fileData, bytesRead, &width, &height, &components, 0);
 
-    // if (data == NULL)
-    // {
-    //     LogError("Texture2D: Failed to load image: %s", file_name);
-    //     return false;
-    // }
+    if (data == NULL)
+    {
+        LogError("Texture2D: Failed to load image: %s", file_name);
+        return false;
+    }
 
-    // GLenum format = GL_RGBA;
-    // GLenum glFormat = GL_RGBA;
-    // switch (components)
-    // {
-    // case 1:
-    // {
-    //     format = GL_R8;
-    //     glFormat = GL_RED;
-    //     break;
-    // }
-    // case 2:
-    // {
-    //     format = GL_RG;
-    //     glFormat = GL_RG;
-    //     break;
-    // }
-    // case 3:
-    // {
-    //     format = GL_RGB;
-    //     glFormat = GL_RGB;
+    GLenum format = GL_RGBA;
+    GLenum glFormat = GL_RGBA;
+    switch (components)
+    {
+    case 1:
+    {
+        format = GL_R8;
+        glFormat = GL_RED;
+        break;
+    }
+    case 2:
+    {
+        format = GL_RG;
+        glFormat = GL_RG;
+        break;
+    }
+    case 3:
+    {
+        format = GL_RGB;
+        glFormat = GL_RGB;
 
-    //     break;
-    // }
-    // case 4:
-    // {
-    //     format = GL_RGBA8;
-    //     glFormat = GL_RGBA;
-    //     break;
-    // }
-    // }
+        break;
+    }
+    case 4:
+    {
+        format = GL_RGBA8;
+        glFormat = GL_RGBA;
+        break;
+    }
+    }
 
-    // createTexture();
+    createTexture();
 
-    // glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, glFormat, GL_UNSIGNED_BYTE, data);
-    // glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, glFormat, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    // if (components == 1)
-    // {
-    //     GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
-    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-    // }
-    // else if (components == 2)
-    // {
-    //     GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_GREEN};
-    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-    // }
+    if (components == 1)
+    {
+        GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+    }
+    else if (components == 2)
+    {
+        GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_GREEN};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+    }
 
-    // //   glBindTexture(GL_TEXTURE_2D, 0);
-    // //   Log(0, "TEXTURE2D: [ID %i] Create Opengl Texture2D (%d,%d) bpp:%d", id, width, height, components);
+    //   glBindTexture(GL_TEXTURE_2D, 0);
+    //   Log(0, "TEXTURE2D: [ID %i] Create Opengl Texture2D (%d,%d) bpp:%d", id, width, height, components);
 
-    // free(fileData);
-    // free(data);
+    free(fileData);
+    free(data);
     return true;
 }
 
@@ -427,39 +430,39 @@ bool Texture2D::LoadFromMemory(const unsigned char *buffer, u16 components, int 
     this->height = height;
     this->components = components;
 
-    // GLenum format = GL_RGBA;
-    // switch (components)
-    // {
-    // case 1:
-    //     format = GL_RED;
-    //     break;
-    // case 2:
-    //     format = GL_RG;
-    //     break;
-    // case 3:
-    //     format = GL_RGB;
-    //     break;
-    // case 4:
-    //     format = GL_RGBA;
-    //     break;
+    GLenum format = GL_RGBA;
+    switch (components)
+    {
+    case 1:
+        format = GL_RED;
+        break;
+    case 2:
+        format = GL_RG;
+        break;
+    case 3:
+        format = GL_RGB;
+        break;
+    case 4:
+        format = GL_RGBA;
+        break;
 
-    //     return false;
-    // }
+        return false;
+    }
 
-    // createTexture();
-    // glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, buffer);
+    createTexture();
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, buffer);
 
-    // glGenerateMipmap(GL_TEXTURE_2D);
-    // if (components == 1)
-    // {
-    //     GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
-    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-    // }
-    // else if (components == 2)
-    // {
-    //     GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_GREEN};
-    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-    // }
+    glGenerateMipmap(GL_TEXTURE_2D);
+    if (components == 1)
+    {
+        GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+    }
+    else if (components == 2)
+    {
+        GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_GREEN};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+    }
 
     return true;
 }

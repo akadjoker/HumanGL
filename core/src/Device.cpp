@@ -4,6 +4,26 @@
 #include "Input.hpp"
 #include "Driver.hpp"
 
+#if defined(PLATFORM_DESKTOP) && defined(_WIN32) && (defined(_MSC_VER) || defined(__TINYC__))
+
+    #include "wdirent.h"    // Required for: DIR, opendir(), closedir()
+#else
+    #include <dirent.h>             // Required for: DIR, opendir(), closedir() 
+#endif
+
+#if defined(_WIN32)
+    #include <direct.h>             // Required for: _getch(), _chdir()
+    #define GETCWD _getcwd          // NOTE: MSDN recommends not to use getcwd(), chdir()
+    #define CHDIR _chdir
+    #include <io.h>                 // Required for: _access() [Used in FileExists()]
+#else
+    #include <unistd.h>             // Required for: getch(), chdir() (POSIX), access()
+    #define GETCWD getcwd
+    #define CHDIR chdir
+#endif
+
+
+
 #ifdef PLATFORM_WIN
 
 #define CONSOLE_COLOR_RESET ""
@@ -50,7 +70,7 @@ Device::Device() : window(nullptr),
 
 Device::~Device()
 {
-    Cleanup();
+    
 }
 
 Device *Device::GetInstance()
@@ -307,20 +327,25 @@ bool Device::Init(const char *windowTitle, int windowWidth, int windowHeight, bo
 
 void Device::Cleanup()
 {
+    LogInfo("Release Device.");
     Driver::Instance().Release();
+    LogInfo("Release Gui.");
     GUI::Instance()->DestroyInstance();
     if (glContext)
     {
+        LogInfo("Release Opengl Context.");
         SDL_GL_DestroyContext(glContext);
         glContext = nullptr;
     }
 
     if (window)
     {
+        LogInfo("Release Window.");
         SDL_DestroyWindow(window);
         window = nullptr;
     }
 
+    LogInfo("Quit :) By! By!");
     SDL_Quit();
 }
 
@@ -507,4 +532,86 @@ unsigned char *LoadDataFile(const char *fileName, unsigned int *bytesRead)
         SDL_LogError(0, "FILEIO: [%s] Failed to open file", fileName);
 
     return data;
+}
+
+bool FileExists(const char *fileName)
+{
+   bool result = false;
+
+#if defined(_WIN32)
+    if (_access(fileName, 0) != -1) result = true;
+#else
+    if (access(fileName, F_OK) != -1) result = true;
+#endif
+    return result;
+}
+
+bool IsFileExtension(const char *fileName, const char *ext)
+{
+    bool result = false;
+
+    const char *fileExt = strrchr(fileName, '.');
+
+    if (fileExt != NULL)
+    {
+        if (strcmp(fileExt, ext) == 0) result = true;
+    }
+
+    return result;
+}
+
+bool DirectoryExists(const char *dirPath)
+{
+    bool result = false;
+
+    DIR *dir = opendir(dirPath);
+    if (dir != NULL)
+    {
+        result = true;
+        closedir(dir);
+    }
+
+    return result;
+}
+
+const char *GetFileExtension(const char *fileName)
+{
+    const char *fileExt = strrchr(fileName, '.');
+
+    if (fileExt != NULL) return fileExt;
+
+    return NULL;
+}
+
+const char *GetFileName(const char *filePath)
+{
+    const char *fileName = strrchr(filePath, '/');
+
+    if (fileName != NULL) return fileName + 1;
+
+    return filePath;
+}
+
+const char *GetFileNameWithoutExt(const char *filePath)
+{
+    static char baseName[256];
+    strcpy(baseName, GetFileName(filePath));
+
+    char *dot = strrchr(baseName, '.');
+    if (dot) *dot = '\0';
+
+    return baseName;
+}
+
+const char *GetDirectoryPath(const char *filePath)
+{
+    static char dirPath[256];
+    strcpy(dirPath, filePath);
+
+    char *lastSlash = strrchr(dirPath, '/');
+
+    if (lastSlash != NULL) lastSlash[1] = '\0';
+    else dirPath[0] = '\0';
+
+    return dirPath;
 }

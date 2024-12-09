@@ -15,32 +15,48 @@ Skin::Skin()
     m_colors[WINDOW] = Color(0.5f, 0.5f, 0.5f, 0.5f);
     m_colors[WINDOW_TOP_BAR] = Color(0.2f, 0.2f, 0.6f, 1.0f);
     m_colors[WINDOW_TITLE] = Color(1.0f, 1.0f, 1.0f, 0.6f);
+    m_font = nullptr;
+
     m_font = new Font();
     m_font->LoadDefaultFont();
+    m_font->Load( "assets/font/font1.fnt");
 }
 
 Skin::~Skin()
 {
-    delete m_font;
+    if (m_font)
+    {
+        m_font->Release();
+        delete m_font;
+        m_font = nullptr;
+    }
 }
 
 GUI::GUI()
 {
-    m_skin = new Skin();
-    anyFocus = false;
+    m_skin=nullptr;
 }
 
 GUI::~GUI()
 {
-    Clear();
-    delete m_skin;
+   
 }
-
+void GUI::init()
+{
+    if (m_skin)
+    {
+        delete m_skin;
+        m_skin=nullptr;
+    }
+    m_skin = new Skin();
+    anyFocus = false;
+}
 GUI *GUI::Instance()
 {
     if (instance == nullptr)
     {
         instance = new GUI();
+        instance->init();
     }
     return instance;
 }
@@ -49,6 +65,7 @@ void GUI::DestroyInstance()
 {
     if (instance)
     {
+        instance->Clear();
         delete instance;
         instance = nullptr;
     }
@@ -61,6 +78,12 @@ void GUI::Clear()
         delete m_widgets[i];
     }
     m_widgets.clear();
+    if (m_skin)
+    {
+        
+        delete m_skin;
+        m_skin = nullptr;
+    }
 }
 
 void GUI::SetSkin(Skin *skin)
@@ -371,7 +394,7 @@ void Window::OnDraw(RenderBatch *batch)
     // batch->DrawRectangle(m_bounds_bar, Color(1,0,0),false);
     // batch->DrawRectangle(m_bounds_hide, Color(1,0,0),false);
 
-    font->SetSize(16);
+    font->SetSize(14);
     font->SetColor(skin->GetColor(WINDOW_TITLE));
     font->Print(m_title.c_str(), GetRealX()+10, GetRealY()-17);
     

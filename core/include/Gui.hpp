@@ -84,6 +84,8 @@ class GUI
     GUI();
     ~GUI();
 
+    void init();
+
     // Prevent copying
     GUI(const GUI &) = delete;
     GUI &operator=(const GUI &) = delete;

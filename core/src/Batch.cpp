@@ -1,6 +1,10 @@
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include "Batch.hpp"
 #include "Math.hpp"
+#include "Device.hpp"
 
 
 #define MAX_TEXT_BUFFER_LENGTH              1024    
@@ -1226,7 +1230,7 @@ void RenderBatch::Quad(Texture2D *texture, const FloatRect &src, float x, float 
 
 Font::Font() 
 {
-    texture = 0x0;
+    
     color.r = 255;
     color.g = 255;
     color.b = 255;
@@ -1254,23 +1258,23 @@ Font::Font()
     m_glyphCount = 0;
     m_glyphPadding = 0;
     textLineSpacing = 15;
-    m_recs.clear();
-    m_glyphs.clear();
-
+    texture = nullptr;
     batch = nullptr;
 }
 
 Font::~Font()
 {
-    Release();
+
 }
 
 void Font::Release()
 {
-    if (texture != 0x0)
+     LogInfo("Release Font.");
+    if (texture)
     {
         texture->Release();
-        texture = 0x0;
+        delete texture;
+        texture = nullptr;
     }
     m_recs.clear();
     m_glyphs.clear();
@@ -1922,86 +1926,184 @@ void Font::Print(float x, float y, const char *text, ...)
     Print(currentBuffer, x, y);
 }
 
-// bool Font::Load(const std::string& filePath)
-// {
+ bool Font::Load(const std::string& filePath)
+{
 
-// //     std::ifstream file(filePath);
-// //    // m_height = 1;
+      if (!FileExists(filePath.c_str()))
+      {
+           LogWarning(" File %s not existe, load defaults ",filePath.c_str());
+           LoadDefaultFont();
+           return false;
+      }  
 
-// //     if (file.is_open())
-// //     {
-// //         std::std::string line;
-// //         while (std::getline(file, line))
-// //         {
-// //           //  Character data;
+    m_glyphCount = 224;
+    
 
-// //             std::istd::stringstream iss(line);
-// //             // std::cout<<line<<std::endl;
+       const char* fileDir  =GetDirectoryPath(filePath.c_str());
+      const char* fileName  =GetFileNameWithoutExt(filePath.c_str()); 
 
-// //             float width = 1;
-// //             float height = 1;
-// //             float xoffset = 0;
-// //             float yoffset = 0;
-// //             float x = 0;
-// //             float y = 0;
+      std::string fontTexturePng = std::string(fileDir) + std::string(fileName) + std::string(".png");
+      std::string fontTextureTga = std::string(fileDir) + std::string(fileName) + std::string(".tga");
+      if (texture)
+      {
+        texture->Release();
+        delete texture;
+        texture = nullptr;
+      }
 
-// //             size_t start = line.find('"');
-// //             size_t end = line.find('"', start + 1);
-// //             if (start != std::std::string::npos && end != std::std::string::npos)
-// //             {
-// //                 int id = line[start + 1];
-// //                 char c = line[start + 1];
-// //             }
 
-// //             // Verificamos se a linha tem o n�mero esperado de valores separados por delimitadores
-// //             std::std::stringstream ss(line.substr(end + 1));
-// //             char delimiter;
-// //             if (ss >> delimiter >> x >> delimiter >> y >> delimiter >> width >> delimiter >> height >> delimiter)
-// //             {
+      if (FileExists(fontTexturePng.c_str()))
+      {
 
-// //                 if (delimiter != ',' || ss.fail() || width <= 1 || height <= 1)
-// //                 {
-// //                     LogError( "Formato incorreto na linha: %s", line.c_str());
-// //                     return false;
-// //                 }
+         //  LogWarning(" Load %s texture ",fontTexturePng.c_str());
+           texture = new Texture2D(fontTexturePng.c_str());
+      } else if (FileExists(fontTextureTga.c_str()))
+      {
+        //  LogWarning(" Load %s texture ",fontTextureTga.c_str());
+          texture = new Texture2D(fontTextureTga.c_str());
+      } else 
+      {
+        LogError("Texture not found: %s%s",fileDir,fileName);
+         LoadDefaultFont();
+        return false;
+      }
 
-// //                /* if (data.height > m_height)
-// //                 {
-// //                     m_height = data.height;
-// //                 }*/
+      
 
-// //                 // std::std::stringstream ss(line.substr(end + 1));
-// //                 // char delimiter;
-// //                 // ss >> delimiter >> data.x >> delimiter >> data.y >> delimiter  >> data.width >> delimiter >> data.height >> delimiter;
+    
 
-// //                 // if (data.height > m_height)
-// //                 // {
-// //                 //     m_height = data.height;
-// //                 // }
+     
+       std::ifstream file(filePath);
+       float m_height =1;
 
-// //             //    std::cout<<data.id<< " " <<data.x<<" "<<data.y<<" "<<data.width<<" "<<data.height<<std::endl;
-// //              //   m_letters.push_back(data);
-// //             //    m_sizes.push_back(data.width);
-// //             }
+       std::vector<Character> m_chars;
 
-// //         }
-// //         file.close();
-// //         return true;
-// //     }
-// //     else
-// //     {
-// //        LogError( "Erro ao abrir o arquivo %s ", filePath.c_str());
-// //         return false;
-// //     }
+       if (file.is_open()) 
+       {
+        std::string line;
+        while (std::getline(file, line)) 
+        {
+            Character data;
+            
+            std::istringstream iss(line);
+           // std::cout<<line<<std::endl;
 
-// return false;
+            data.width= 1;
+            data.height= 1;
+            data.xoffset= 0;
+            data.yoffset= 0;
+            data.x=0;
+            data.y=0;
 
-// }
+
+
+            size_t start = line.find('"');
+            size_t end = line.find('"', start + 1);
+            if (start != std::string::npos && end != std::string::npos) 
+            {
+
+                data.id = static_cast<int>(line[start + 1]);
+            }
+
+             // Verificamos se a linha tem o número esperado de valores separados por delimitadores
+            std::stringstream ss(line.substr(end + 1));
+            char delimiter;
+            if (ss >> delimiter >> data.x >> delimiter >> data.y >> delimiter >> data.width >> delimiter >> data.height >> delimiter) 
+            {
+            
+                if (delimiter != ',' || ss.fail() || data.width <= 1 || data.height <= 1) 
+                {
+                    LogError("wrong format: %s", line.c_str());
+                    LoadDefaultFont();
+          
+                   return false;
+                }
+
+                m_chars.push_back(data);
+
+
+                if (data.height > m_height) 
+                {
+                    m_height = data.height;
+                }
+
+
+            }
+
+         
+          
+        }
+        file.close();
+
+
+        m_glyphCount =(int) m_chars.size();   
+        m_glyphPadding = 0;   
+
+
+
+        m_glyphs.reserve(m_glyphCount);
+        m_recs.reserve(m_glyphCount);
+
+    
+    
+
+   
+
+    texture ->SetMinFilter(FilterMode::Linear);
+    texture ->SetMagFilter(FilterMode::Linear);
+    texture ->SetWrapS(WrapMode::ClampToEdge);
+    texture ->SetWrapT(WrapMode::ClampToEdge);
+ 
+
+
+
+
+    for (int i = 0; i < m_glyphCount; i++)
+    {
+
+        Character c = m_chars[i];
+  
+
+        m_glyphs[i].value = c.id;
+
+        m_recs[i].x = c.x;
+        m_recs[i].y = c.y;
+        m_recs[i].width  = c.width;
+        m_recs[i].height = c.height;
+
+        m_glyphs[i].offsetX = c.xoffset;
+        m_glyphs[i].offsetY = c.yoffset;
+        m_glyphs[i].advanceX = 0;
+    }
+
+ 
+
+     m_baseSize = (int)m_recs[0].height;
+
+    
+
+
+
+
+        return true;
+    } else 
+    {
+         LoadDefaultFont();
+         LogError("File not found: %s", filePath);
+        return false;
+    }
+ return false;
+
+}
 
 int Font::getGlyphIndex(int codepoint)
 {
-    int index = 0;
 
+    if (m_glyphs.size()<9)
+    {
+            return 0;
+    }
+    int index = 0;
     int fallbackIndex = 0; // Get index of fallback glyph '?'
 
     // Look for character index in the unordered charset
@@ -2056,6 +2158,13 @@ bool Font::LoadDefaultFont()
 
     m_glyphs.resize(m_glyphCount);
     m_recs.resize(m_glyphCount);
+
+    if (texture)
+    {
+        texture->Release();
+        delete texture;
+    
+    }
 
     texture = new Texture2D(pixmap);
 

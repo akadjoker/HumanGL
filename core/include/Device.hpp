@@ -2,6 +2,23 @@
 #include "Config.hpp"
 #include "Gui.hpp"
 
+void LogError(const char *msg, ...);
+void LogWarning(const char *msg, ...);
+void LogInfo(const char *msg, ...);
+unsigned char *LoadDataFile(const char *fileName, unsigned int *bytesRead);
+char *LoadTextFile(const char *fileName);
+bool FileExists(const char *fileName);
+bool DirectoryExists(const char *dirPath);              
+bool IsFileExtension(const char *fileName, const char *ext); // Check file extension (including point: .png, .wav)
+const char *TextFormat(const char *text, ...);
+const char *GetFileExtension(const char *fileName);         // Get pointer to extension for a filename string (includes dot: '.png')
+const char *GetFileName(const char *filePath);              // Get pointer to filename for a path string
+const char *GetFileNameWithoutExt(const char *filePath);    // Get filename string without extension (uses static string)
+const char *GetDirectoryPath(const char *filePath);         // Get full path for a given fileName with path (uses static string)
+
+
+
+
 class Device
 {
 private:

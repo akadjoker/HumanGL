@@ -1,8 +1,8 @@
 #include "Pixmap.hpp"
 
 
-// #define STB_IMAGE_IMPLEMENTATION
-// #include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 // #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include "stb_image_write.h"
 
@@ -207,15 +207,15 @@ void Pixmap::Fill(u32 rgba)
 bool Pixmap::Load(const char *file_name)
 {
 
-    // pixels = stbi_load(file_name, &width, &height, &components, 0);
+    pixels = stbi_load(file_name, &width, &height, &components, 0);
 
-    // if (pixels == nullptr)
-    // {
-    //     LogError("Failed to load image: %s", file_name);
-    //     return false;
-    // }
+    if (pixels == nullptr)
+    {
+        LogError("Failed to load image: %s", file_name);
+        return false;
+    }
 
-    // Log(0, "PIXMAP: Load image: %s (%d,%d) bpp:%d", file_name, width, height, components);
+    LogInfo( "PIXMAP: Load image: %s (%d,%d) bpp:%d", file_name, width, height, components);
 
     return true;
 }
@@ -223,12 +223,12 @@ bool Pixmap::Load(const char *file_name)
 bool Pixmap::LoadFromMemory(const unsigned char *buffer, unsigned int bytesRead)
 {
 
-    // pixels = stbi_load_from_memory(buffer, bytesRead, &width, &height, &components, 0);
-    // if (pixels == nullptr)
-    // {
-    //     LogError("Failed to load image from memory");
-    //     return false;
-    // }
+    pixels = stbi_load_from_memory(buffer, bytesRead, &width, &height, &components, 0);
+    if (pixels == nullptr)
+    {
+        LogError("Failed to load image from memory");
+        return false;
+    }
     return true;
 }
 
